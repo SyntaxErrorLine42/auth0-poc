@@ -1,0 +1,31 @@
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.Web
+@inject AppDbContext Db
+
+<PageTitle>Passes</PageTitle>
+
+<h1>Passes</h1>
+<p>Total: @total</p>
+<p>Active: @active</p>
+
+<AuthorizeView>
+    <Authorized>
+        <a href="/list">My passes</a>
+        <!-- data-enhance-nav = false disabled the pre-fetching -->
+        <a href="/logout" data-enhance-nav="false">Logout</a>
+    </Authorized>
+    <NotAuthorized>
+        <a href="/login" data-enhance-nav="false">Login</a>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+    int total, active;
+
+    protected override async Task OnInitializedAsync()
+    {
+        total = await Db.Passes.CountAsync();
+        active = await Db.Passes.CountAsync(p => p.Status == PassStatus.ACTIVE);
+    }
+}

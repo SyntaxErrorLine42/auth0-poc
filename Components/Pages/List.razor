@@ -1,0 +1,59 @@
+@page "/list"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Components.Web
+@attribute [Authorize]
+@inject AppDbContext Db
+
+<PageTitle>My passes</PageTitle>
+
+<h1>My passes</h1>
+<a href="/">Home</a>
+
+<table>
+    <thead>
+        <tr><th>Name</th><th>Document</th><th>Issued</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+    @foreach (var p in passes)
+    {
+        <tr>
+            <td><a href="/info/@p.Id">@p.Name</a></td>
+            <td>@p.Document</td>
+            <td>@p.IssuedAt.ToString("u")</td>
+            <td>@p.Status</td>
+            <td>
+                <form method="post" @formname="@($"cancel-{p.Id}")" @onsubmit="() => Cancel(p.Id)">
+                    <AntiforgeryToken />
+                    <button disabled="@(p.Status != PassStatus.ACTIVE)">Cancel</button>
+                </form>
+                <form method="post" @formname="@($"delete-{p.Id}")" @onsubmit="() => Delete(p.Id)">
+                    <AntiforgeryToken />
+                    <button>Delete</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+    List<Pass> passes = [];
+
+    protected override async Task OnInitializedAsync() => await Load();
+
+    async Task Load() =>
+        passes = await Db.Passes.AsNoTracking().OrderByDescending(p => p.IssuedAt).ToListAsync();
+
+    async Task Cancel(Guid id)
+    {
+        await Db.Passes.Where(p => p.Id == id)
+            .ExecuteUpdateAsync(s => s.SetProperty(p => p.Status, PassStatus.CANCELLED));
+        await Load();
+    }
+
+    async Task Delete(Guid id)
+    {
+        await Db.Passes.Where(p => p.Id == id).ExecuteDeleteAsync();
+        await Load();
+    }
+}

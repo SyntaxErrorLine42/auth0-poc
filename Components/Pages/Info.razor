@@ -1,0 +1,30 @@
+@page "/info/{Id:guid}"
+@using Microsoft.AspNetCore.Components.Web
+@inject AppDbContext Db
+@inject NavigationManager Nav
+
+<PageTitle>Pass</PageTitle>
+
+@if (pass is not null)
+{
+    <h1>@pass.Name</h1>
+    <p>Status: @pass.Status</p>
+    <p>Document: @pass.Document</p>
+    <p>Issued: @pass.IssuedAt.ToString("u")</p>
+    <a href="/">Home</a>
+}
+
+@code {
+    [Parameter] public Guid Id { get; set; }
+
+    Pass? pass;
+
+    protected override async Task OnInitializedAsync()
+    {
+        pass = await Db.Passes.FirstOrDefaultAsync(p => p.Id == Id);
+        if (pass is null)
+        {
+            Nav.NotFound();
+        }
+    }
+}
