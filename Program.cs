@@ -59,6 +59,9 @@ builder.Services.Configure<ForwardedHeadersOptions>(o =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+    scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+
 app.UseForwardedHeaders();
 
 // Configure the HTTP request pipeline.
