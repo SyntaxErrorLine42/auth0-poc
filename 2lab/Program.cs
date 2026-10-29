@@ -36,6 +36,7 @@ app.MapGet("/", (HttpRequest request) =>
             <label><input type=checkbox name=on {(xssEnabled ? "checked" : "")} onchange="this.form.submit()"> Vulnerability enabled</label>
             <p>Instructions: log in as user / user123, then post <code>&lt;script&gt;alert(document.cookie)&lt;/script&gt;</code> as a comment. With the vulnerability enabled the script runs on every page load and shows your session cookie. With it disabled the comment is HTML-encoded and shown as plain text.</p>
         </form>
+        <p>{(request.Query.ContainsKey("error-comment") ? "Only logged in users can comment!" : "")}</p>
         <form method=post action=/comment>
             <input name=text size=50> <button>Post comment</button>
         </form>
@@ -71,6 +72,7 @@ app.MapPost("/login", async (HttpContext context) =>
 
 app.MapPost("/comment", async (HttpContext context) =>
 {
+    if (CurrentUser(context.Request) == null) return Results.Redirect("/?error-comment");
     comments.Add((await context.Request.ReadFormAsync())["text"].ToString());
     return Results.Redirect("/");
 });
